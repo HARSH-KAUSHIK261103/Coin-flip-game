@@ -30,15 +30,19 @@ MetaMask Extension: Install the MetaMask browser extension. MetaMask
 Installation
 
 Clone the Repository
-git clone <repository-url>
+
+git clone ['https://github.com/HARSH-KAUSHIK261103/Coin-flip-game.git']
 
 Navigate to the Project Directory
+
 cd crypto-coin-flip-game
 
 Install Dependencies
+
 npm install
 
 Start the Development Server
+
 npm start
 
 The application will be accessible at http://localhost:3000.
