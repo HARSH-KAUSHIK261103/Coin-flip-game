@@ -34,7 +34,7 @@ MetaMask Extension: Install the MetaMask browser extension. MetaMask
 ## Installation
 
 
-### `git clone <repository-url>`
+### `git clone (https://github.com/HARSH-KAUSHIK261103/Coin-flip-game.git)`
 
 ### `cd crypto-coin-flip-game`
 
