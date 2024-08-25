@@ -1,36 +1,70 @@
-import React, { useState } from "react";
-import MetaMaskLogo from './MetaMask_Fox.svg (1).png'; 
-import Web3 from "web3";
-import './App.css'; 
+import React, { useState } from 'react';
+import MetaMaskLogo from './MetaMask_Fox.svg (1).png';
+import './App.css';
+import ThreeCoin from './ThreeCoin';
+import { useWeb3 } from './context/BlockchainContext';
 
 function App() {
-  const [walletAddress, setWalletAddress] = useState(null);
-  const [balance, setBalance] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const { walletAddress, balance, loading, connect, debitUser, creditUser } = useWeb3();
+  const [selectedToken, setSelectedToken] = useState('ETH');
+  const [amount, setAmount] = useState('');
+  const [side, setSide] = useState('');
+  const [result, setResult] = useState(null);
+  const [flipping, setFlipping] = useState(false);
 
-  const connect = async () => {
-    setLoading(true);
-    try {
-      const accounts = await window?.ethereum?.request({
-        method: "eth_requestAccounts",
-      });
-      if (accounts.length > 0) {
-        setWalletAddress(accounts[0]);
-        const web3 = new Web3(window.ethereum);
-        const balanceWei = await web3.eth.getBalance(accounts[0]);
-        const balanceEth = web3.utils.fromWei(balanceWei, 'ether');
-        setBalance(parseFloat(balanceEth).toFixed(4));
-      }
-    } catch (error) {
-      console.error("Connection failed", error);
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+
+    
+    const isValid = /^(\d*\.?\d*)?$/.test(value);
+
+   
+    if (isValid) {
+      setAmount(value);
     }
-    setLoading(false);
+  };
+
+  const handleBlur = () => {
+    
+    if (amount === '' || parseFloat(amount) <= 0) {
+      setAmount('');
+    }
+  };
+
+  const flipCoin = async () => {
+    setFlipping(true);
+    setResult(null);
+
+    try {
+      
+      await debitUser(amount);
+
+      
+      setTimeout(async () => {
+        const randomSide = Math.random() < 0.5 ? 'Heads' : 'Tails';
+        const win = side === randomSide;
+        console.log(`Side: ${side}, Random Side: ${randomSide}`);
+        console.log(`Win Value: ${win}, Type: ${typeof win}`);
+        setFlipping(false);
+        
+        if (win) {
+         
+          await creditUser(amount);
+          setResult(`You won! You get ${amount * 2} ${selectedToken}`);
+        } else {
+          setResult('You lost! Better luck next time.');
+        }
+       
+      }, 3000);
+    } catch (error) {
+      console.error("Error during transaction:", error);
+      setResult('Error processing transaction. Please try again.');
+      setFlipping(false);
+    }
   };
 
   return (
     <div className="app-container">
-      <h1>Welcome to CryptoConnect</h1>
-      <p>Connect your MetaMask wallet to get started</p>
       <button onClick={connect} className="connect-button">
         {walletAddress ? (
           <>
@@ -38,16 +72,66 @@ function App() {
             {balance} ETH
           </>
         ) : (
-          loading ? "Connecting..." : "Connect"
+          loading ? 'Connecting...' : 'Connect'
         )}
       </button>
-      {walletAddress && (
-        <p className="wallet-info">
-          Connected to: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-        </p>
-      )}
+      <h1>Crypto Coin Flip Game</h1>
+      <p>Select the amount and side you want to bet on:</p>
+      <div className="game-container">
+        <div className="form-group">
+          <label htmlFor="token-select">Select Token:</label>
+          <select
+            id="token-select"
+            value={selectedToken}
+            onChange={(e) => setSelectedToken(e.target.value)}
+          >
+            <option value="ETH">ETH</option>
+            <option value="SOL">SOL</option>
+            <option value="BTC">BTC</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="amount-input">Amount to Bet:</label>
+          <input
+            id="amount-input"
+            type="number"
+            value={amount}
+            onChange={handleAmountChange}
+            onBlur={handleBlur}
+            placeholder="Enter amount"
+          />
+        </div>
+        <div className="selection-container">
+          <div className="coin-container">
+            <ThreeCoin flipping={flipping} />
+          </div>
+          <div className="form-group">
+            <label>Select Side:</label>
+            <div className="side-buttons-container">
+              <button
+                className={`side-button ${side === 'Heads' ? 'selected' : ''}`}
+                onClick={() => setSide('Heads')}
+              >
+                Heads
+              </button>
+              <button
+                className={`side-button ${side === 'Tails' ? 'selected' : ''}`}
+                onClick={() => setSide('Tails')}
+              >
+                Tails
+              </button>
+            </div>
+          </div>
+        </div>
+        <button className="flip-button" onClick={flipCoin} disabled={!amount || !side}>
+          Flip the Coin!
+        </button>
+        {result && <p className="result">{result}</p>}
+      </div>
     </div>
   );
 }
 
 export default App;
+
+
